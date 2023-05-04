@@ -48,6 +48,7 @@ def main():
                 display_name=topic,
                 training_phrases_parts=value['questions'],
                 message_texts=[value['answer']],
+                language_code=env("LANGUAGE_CODE")
             )
             logger.info(f"Intent created: {intent}")
         return
