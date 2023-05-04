@@ -1,10 +1,12 @@
 import logging
+import json
 
+from argparse import ArgumentParser
 from environs import Env
 from telegram import Update
 from telegram.ext import CallbackContext, Updater, CommandHandler, MessageHandler, Filters
 
-from dialogflow_utils import detect_intent_texts
+from dialogflow_utils import detect_intent_texts, create_intent
 
 
 env = Env()
@@ -32,12 +34,30 @@ def reply(update: Update, context: CallbackContext):
 
 
 def main():
-    updater = Updater(env("TG_BOT_API_KEY"))
-    dispatcher = updater.dispatcher
+    parser = ArgumentParser()
+    parser.add_argument("--train", type=str)
+    parser.add_argument("--tg-bot", action="store_true")
+    args = parser.parse_args()
+    logger.info(f"Args: {args}")
+    if args.train:
+        with open(args.train, "r", encoding='utf8') as f:
+            data = json.load(f)
+        for topic, value in data.items():
+            intent = create_intent(
+                project_id=env("PROJECT_ID"),
+                display_name=topic,
+                training_phrases_parts=value['questions'],
+                message_texts=[value['answer']],
+            )
+            logger.info(f"Intent created: {intent}")
+        return
+    if args.tg_bot:
+        updater = Updater(env("TG_BOT_API_KEY"))
+        dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, reply))
-    updater.start_polling()
+        dispatcher.add_handler(CommandHandler("start", start))
+        dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, reply))
+        updater.start_polling()
 
 
 if __name__ == "__main__":
