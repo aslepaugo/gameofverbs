@@ -28,7 +28,8 @@ def reply(update: Update, context: CallbackContext):
             update.message.text,
             env("LANGUAGE_CODE")
         )
-        update.message.reply_text(bot_reply)
+        if bot_reply:
+            update.message.reply_text(bot_reply)
     except Exception as e:
         logger.error(e)
 

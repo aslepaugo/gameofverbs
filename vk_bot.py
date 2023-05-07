@@ -20,13 +20,15 @@ def reply(event, vk_api):
             env("PROJECT_ID"),
             event.user_id,
             event.text,
-            env("LANGUAGE_CODE")
+            env("LANGUAGE_CODE"),
+            skip_response_on_fallback=True
         )
-        vk_api.messages.send(
-            user_id=event.user_id,
-            message=bot_reply,
-            random_id=random.randint(1, 1000)
-        )
+        if bot_reply:
+            vk_api.messages.send(
+                user_id=event.user_id,
+                message=bot_reply,
+                random_id=random.randint(1, 1000)
+            )
     except Exception as e:
         logger.error(e)
 
