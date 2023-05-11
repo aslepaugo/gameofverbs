@@ -7,6 +7,7 @@ from telegram import Update
 from telegram.ext import CallbackContext, Updater, CommandHandler, MessageHandler, Filters
 
 from dialogflow_utils import detect_intent_texts, create_intent
+from logger import TelegramBotHandler
 
 
 env = Env()
@@ -18,6 +19,10 @@ logger = logging.getLogger(__name__)
 def start(update: Update, context: CallbackContext):
     update.message.reply_markdown_v2('Здравствуйте. Я бот, который поможет вам.')
     logger.info("Starting start()")
+
+
+def error_handler(update: Update, context: CallbackContext, error: Exception):
+    logger.warning('Update "%s" caused error "%s"', update, error)
 
 
 def reply(update: Update, context: CallbackContext):
@@ -37,9 +42,16 @@ def reply(update: Update, context: CallbackContext):
 def main():
     parser = ArgumentParser()
     parser.add_argument("--train", type=str)
-    parser.add_argument("--tg-bot", action="store_true")
     args = parser.parse_args()
+
+    tg_bot_api_key = env("TG_BOT_API_KEY")
+    tg_admin_chat_id = env("TG_ADMIN_CHAT_ID")
+    logger_handler = TelegramBotHandler(tg_bot_api_key, tg_admin_chat_id)
+    logger_handler.setLevel(logging.WARNING)
+    logger_handler.formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    logger.addHandler(logger_handler)
     logger.info(f"Args: {args}")
+
     if args.train:
         with open(args.train, "r", encoding='utf8') as f:
             data = json.load(f)
@@ -53,13 +65,15 @@ def main():
             )
             logger.info(f"Intent created: {intent}")
         return
-    if args.tg_bot:
-        updater = Updater(env("TG_BOT_API_KEY"))
-        dispatcher = updater.dispatcher
 
-        dispatcher.add_handler(CommandHandler("start", start))
-        dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, reply))
-        updater.start_polling()
+    updater = Updater(tg_bot_api_key)
+    dispatcher = updater.dispatcher
+
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, reply))
+    dispatcher.add_error_handler(error_handler)
+    updater.start_polling()
+    updater.idle()
 
 
 if __name__ == "__main__":
