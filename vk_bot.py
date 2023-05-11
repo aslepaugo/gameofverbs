@@ -1,5 +1,6 @@
 import logging
 import random
+from time import sleep
 import vk_api as vk
 
 from environs import Env
@@ -44,6 +45,16 @@ if __name__ == "__main__":
     logger_handler.setLevel(logging.WARNING)
     logger_handler.formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
     logger.addHandler(logger_handler)
-    for event in longpoll.listen():
-        if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-            reply(event, vk_api)
+
+    while True:
+        try:
+            for event in longpoll.listen():
+                if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+                    reply(event, vk_api)
+        except ConnectionError as e:
+            logger.error(e)
+            sleep(5)
+            continue
+        except Exception as e:
+            logger.error(e)
+            break
