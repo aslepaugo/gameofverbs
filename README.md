@@ -37,10 +37,10 @@ Launch on [VKontakte](https://vk.com/):
 python vk_bot.py
 ```
 
-Launch training of the bot:
+## How to train
 
 ```
-python tg_bot.py --train your_questions.json
+python training.py --path your_questions.json --lang ru
 ``` 
 
 Example of the questions:
