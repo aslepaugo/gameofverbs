@@ -15,22 +15,19 @@ logger = logging.getLogger(__name__)
 
 
 def reply(event, vk_api):
-    try:
-        bot_reply, is_fallback = detect_intent_texts(
-            os.environ["PROJECT_ID"],
-            event.user_id,
-            event.text,
-            os.environ["LANGUAGE_CODE"],
-            skip_response_on_fallback=True
+    bot_reply, is_fallback = detect_intent_texts(
+        os.environ["PROJECT_ID"],
+        event.user_id,
+        event.text,
+        os.environ["LANGUAGE_CODE"],
+        skip_response_on_fallback=True
+    )
+    if not is_fallback:
+        vk_api.messages.send(
+            user_id=event.user_id,
+            message=bot_reply,
+            random_id=random.randint(1, 1000)
         )
-        if not is_fallback:
-            vk_api.messages.send(
-                user_id=event.user_id,
-                message=bot_reply,
-                random_id=random.randint(1, 1000)
-            )
-    except Exception as e:
-        logger.error(e)
 
 
 def main():
