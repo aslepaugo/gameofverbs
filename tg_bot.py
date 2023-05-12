@@ -23,14 +23,13 @@ def error_handler(update: Update, error: Exception):
 
 def reply(update: Update, context: CallbackContext):
     try:
-        bot_reply = detect_intent_texts(
+        bot_reply, _ = detect_intent_texts(
             os.environ["PROJECT_ID"],
             update.message.from_user.id,
             update.message.text,
             os.environ["LANGUAGE_CODE"]
         )
-        if bot_reply:
-            update.message.reply_text(bot_reply)
+        update.message.reply_text(bot_reply)
     except Exception as e:
         logger.error(e)
 
