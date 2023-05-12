@@ -1,6 +1,7 @@
 import logging
+import os
 
-from environs import Env
+from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import CallbackContext, Updater, CommandHandler, MessageHandler, Filters
 
@@ -8,9 +9,6 @@ from dialogflow_utils import detect_intent_texts
 from logger import TelegramBotHandler
 
 
-env = Env()
-env.read_env()
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -26,10 +24,10 @@ def error_handler(update: Update, error: Exception):
 def reply(update: Update, context: CallbackContext):
     try:
         bot_reply = detect_intent_texts(
-            env("PROJECT_ID"),
+            os.environ["PROJECT_ID"],
             update.message.from_user.id,
             update.message.text,
-            env("LANGUAGE_CODE")
+            os.environ["LANGUAGE_CODE"]
         )
         if bot_reply:
             update.message.reply_text(bot_reply)
@@ -38,8 +36,11 @@ def reply(update: Update, context: CallbackContext):
 
 
 def main():
-    tg_bot_api_key = env("TG_BOT_API_KEY")
-    tg_admin_chat_id = env("TG_ADMIN_CHAT_ID")
+    load_dotenv()
+    logging.basicConfig(level=logging.INFO)
+
+    tg_bot_api_key = os.environ["TG_BOT_API_KEY"]
+    tg_admin_chat_id = os.environ["TG_ADMIN_CHAT_ID"]
     logger_handler = TelegramBotHandler(tg_bot_api_key, tg_admin_chat_id)
     logger_handler.setLevel(logging.WARNING)
     logger_handler.formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')

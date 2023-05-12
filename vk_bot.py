@@ -1,28 +1,26 @@
 import logging
+import os
 import random
 from time import sleep
 import vk_api as vk
 
-from environs import Env
+from dotenv import load_dotenv
 from vk_api.longpoll import VkLongPoll, VkEventType
 
 from dialogflow_utils import detect_intent_texts
 from logger import TelegramBotHandler
 
 
-env = Env()
-env.read_env()
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def reply(event, vk_api):
     try:
         bot_reply = detect_intent_texts(
-            env("PROJECT_ID"),
+            os.environ["PROJECT_ID"],
             event.user_id,
             event.text,
-            env("LANGUAGE_CODE"),
+            os.environ["LANGUAGE_CODE"],
             skip_response_on_fallback=True
         )
         if bot_reply:
@@ -35,12 +33,15 @@ def reply(event, vk_api):
         logger.error(e)
 
 
-if __name__ == "__main__":
-    vk_session = vk.VkApi(token=env("VK_API_KEY"))
+def main():
+    load_dotenv()
+    logging.basicConfig(level=logging.INFO)
+
+    vk_session = vk.VkApi(token=os.environ["VK_API_KEY"])
     vk_api = vk_session.get_api()
     longpoll = VkLongPoll(vk_session)
-    tg_bot_api_key = env("TG_BOT_API_KEY")
-    tg_admin_chat_id = env("TG_ADMIN_CHAT_ID")
+    tg_bot_api_key = os.environ["TG_BOT_API_KEY"]
+    tg_admin_chat_id = os.environ["TG_ADMIN_CHAT_ID"]
     logger_handler = TelegramBotHandler(tg_bot_api_key, tg_admin_chat_id)
     logger_handler.setLevel(logging.WARNING)
     logger_handler.formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
@@ -58,3 +59,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(e)
             break
+
+
+if __name__ == "__main__":
+    main()
